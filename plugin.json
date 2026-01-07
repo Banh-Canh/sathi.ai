@@ -1,0 +1,12 @@
+{
+  "id": "sathi.ai",
+  "name": "Sathi - An AI wrapper for Dank Linux",
+  "description": "Lets you interact with an LLM of your choice.",
+  "version": "1.0.0",
+  "author": "Shinda Singh",
+  "icon": "widgets",
+  "type": "widget",
+  "component": "./Sathi.qml",
+  "settings": "./Settings.qml",
+  "permissions": ["settings_read", "settings_write"]
+}
