@@ -57,17 +57,20 @@ DankRectangle {
     color: root.isUser ? Theme.surfaceContainerHighest : Theme.surfaceContainerHigh
     radius: Theme.cornerRadius
     
-    StyledText {
+    TextEdit {
         id: msgText
         text: root.displayedText
-        textFormat: Text.MarkdownText
+        textFormat: TextEdit.MarkdownText
+        readOnly: true
+        selectByMouse: true
         onLinkActivated: link => Qt.openUrlExternally(link)
         
         // Use full available width minus padding
         width: root.width - (Theme.spacingL * 2)
-        wrapMode: Text.Wrap
+        wrapMode: TextEdit.Wrap
         
         anchors.centerIn: parent
         color: Theme.surfaceText
+        font.pixelSize: Theme.fontSizeMedium
     }    
 }
