@@ -9,7 +9,6 @@ import qs.Modules.AppDrawer
 import qs.Services
 import qs.Widgets
 import qs.Modules.Plugins
-import "."
 
 PluginComponent {
     id: root
@@ -228,58 +227,14 @@ PluginComponent {
                     }
 
                     // Display a small combo box at the bottom to change the model dynamically.
-                    ComboBox {
+                    AiSelector {
                         id: cbModelSelector
-                        model: availableAisModel /* [ 
-                            { value: 1, text: "Model 1" },
-                            { value: 2, text: "Model 2" },
-                            { value: 3, text: "Model 3" }
-                        ]*/
+                        model: availableAisModel
+                        maxPopupHeight: popoutColumn.height * 0.6
 
                         width: parent.width
                         textRole: "display_name"
                         valueRole: "name"
-                        flat: true
-                        height: 40
-
-                        // popup.Material.foreground: "red"
-                        // Material.accent: "green"
-                        // Material.foreground: "blue"
-                        // Redefine the contentItem to change the displayed text's color
-                        contentItem: Text {
-                            text: cbModelSelector.displayText // Use control.displayText to access the current text
-                            font: cbModelSelector.font
-                            color: Theme.backgroundText
-                            verticalAlignment: Text.AlignVCenter
-                        }
-
-                        // indicator.color:         // Customize the indicator component
-                        indicator: Rectangle {
-                            // Anchor it to the right side of the ComboBox
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: 20 // Adjust width as needed
-                            height: parent.height // Match ComboBox height
-                            color: "transparent"
-
-                            Text {
-                                text: "▼"
-                                anchors.centerIn: parent
-                                color:  Theme.backgroundText
-                                font.pixelSize: cbModelSelector.font.pixelSize * 0.7
-                            }
-                        }
-
-
-                        // Set cur@!!@rentValue to the value stored in the backend.
-                        currentValue: 1; //backend.modifier
-                        displayText: "Using Model - " + currentText
-                        font.pixelSize: Theme.fontSizeSmall
-                        font.bold: true
-                        // contentItem.contentItem.font.pixelSize: Theme.fontSizeSmall
-                        // When an item is selected, update the backend.
-                        // onActivated: backend.modifier = currentValue
-
                     }
                 }
             }
