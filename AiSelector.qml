@@ -1,6 +1,5 @@
 import QtQuick
 import qs.Common 
-import qs.Widgets
 import QtQuick.Controls
 
 // Display a small combo box at the bottom to change the model dynamically.
