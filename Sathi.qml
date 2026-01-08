@@ -1,11 +1,7 @@
 import QtQuick
-import QtQuick.Controls
 import Quickshell
 import Quickshell.Widgets
-import Quickshell.Io
 import qs.Common
-import qs.Modals.Spotlight
-import qs.Modules.AppDrawer
 import qs.Services
 import qs.Widgets
 import qs.Modules.Plugins
@@ -232,9 +228,18 @@ PluginComponent {
                         model: availableAisModel
                         maxPopupHeight: popoutColumn.height * 0.6
 
+                        currentValue: pluginData.aiModel ||  "gemini-flash-latest"
                         width: parent.width
                         textRole: "display_name"
                         valueRole: "name"
+
+                        onActivated: {
+                            console.log('model changed to:', currentValue);
+                            getData('aiModel');
+                            setData('aiModel', currentValue);
+
+                            console.log('current value is now:', getData('aiModel'));
+                        }
                     }
                 }
             }
