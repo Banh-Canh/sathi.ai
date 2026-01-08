@@ -49,7 +49,7 @@ PluginComponent {
     property ListModel chatModel: ListModel { }
     
 
-    ChatBackend {
+    ChatBackendChat {
         id: backend
         apiKey: pluginData.geminiApiKey || ""
         running: false 
@@ -136,8 +136,8 @@ PluginComponent {
                     anchors.top: parent.top
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    anchors.bottom: chatInput.top
-                    anchors.bottomMargin: Theme.spacingMedium
+                    anchors.bottom: columnBottomSection.top
+                    anchors.bottomMargin: Theme.spacingL
                    
                     contentWidth: width
                     contentHeight: chatColumn.height
@@ -172,20 +172,88 @@ PluginComponent {
                     }
                 }
 
-                // Dank Textfield at the bottom for user input
-                ChatInput {
-                    id: chatInput
+                Column { 
+                    id: columnBottomSection
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
-                    anchors.margins: Theme.spacingLarge
-                              
-                    onAccepted: {
-                        // Handle the input text here
-                        console.log("User input:", text); 
-                        root.processMessage(text);
-                        
-                        text = ""; // Clear input after processing
+                    anchors.margins: Theme.spacingL
+                    // anchors.bottomMargin: Theme.spacingL
+                    // bottomPadding: 20
+                    
+                    spacing: Theme.spacingXS
+                    
+                    width: parent.width
+                    // height: 75
+
+                    // Dank Textfield at the bottom for user input
+                    ChatInput {
+                        id: chatInput
+                        width: parent.width
+                        // anchors.bottomMargin: Theme.spacingL
+                        // anchors.margins: Theme.spacingL
+                        onAccepted: {
+                            // Handle the input text here
+                            console.log("User input:", text); 
+                            root.processMessage(text);
+                            
+                            text = ""; // Clear input after processing
+                        }
+                    }
+
+                    // Display a small combo box at the bottom to change the model dynamically.
+                    ComboBox {
+                        id: cbModelSelector
+                        model: [
+                            { value: 1, text: "Model 1" },
+                            { value: 2, text: "Model 2" },
+                            { value: 3, text: "Model 3" }
+                        ]
+
+                        width: parent.width
+                        textRole: "text"
+                        valueRole: "value"
+                        flat: true
+                        height: 40
+
+                        // popup.Material.foreground: "red"
+                        // Material.accent: "green"
+                        // Material.foreground: "blue"
+                        // Redefine the contentItem to change the displayed text's color
+                        contentItem: Text {
+                            text: cbModelSelector.displayText // Use control.displayText to access the current text
+                            font: cbModelSelector.font
+                            color: Theme.backgroundText
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        // indicator.color:         // Customize the indicator component
+                        indicator: Rectangle {
+                            // Anchor it to the right side of the ComboBox
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 20 // Adjust width as needed
+                            height: parent.height // Match ComboBox height
+                            color: "transparent"
+
+                            Text {
+                                text: "▼"
+                                anchors.centerIn: parent
+                                color:  Theme.backgroundText
+                                font.pixelSize: cbModelSelector.font.pixelSize * 0.7
+                            }
+                        }
+
+
+                        // Set cur@!!@rentValue to the value stored in the backend.
+                        currentValue: 1; //backend.modifier
+                        displayText: "Using Model - " + currentText
+                        font.pixelSize: Theme.fontSizeSmall
+                        font.bold: true
+                        // contentItem.contentItem.font.pixelSize: Theme.fontSizeSmall
+                        // When an item is selected, update the backend.
+                        // onActivated: backend.modifier = currentValue
+
                     }
                 }
             }

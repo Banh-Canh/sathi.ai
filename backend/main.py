@@ -5,6 +5,35 @@ from google import genai
 
 # Simple buffering for stdin to ensure we get complete lines
 def main():
+    # Handle --list flag to list available models
+    if "--list" in sys.argv:
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            print(json.dumps({"error": "GEMINI_API_KEY not found"}), flush=True)
+            return
+
+        try:
+            client = genai.Client(api_key=api_key)
+            models = client.models.list()
+            model_list = []
+            for m in models:
+                name = m.name
+                
+                if name.startswith("models/"):
+                    name = name[7:]
+                
+                model_data = {"name": name}
+
+                if hasattr(m, 'display_name'):
+                    model_data["display_name"] = m.display_name
+
+                model_list.append(model_data)
+            
+            print(json.dumps(model_list), flush=True)
+        except Exception as e:
+            print(json.dumps({"error": f"List failed: {str(e)}"}), flush=True)
+        return
+
     api_key = os.environ.get("GEMINI_API_KEY")
     chat = None
     client = None
@@ -13,7 +42,7 @@ def main():
         try:
             client = genai.Client(api_key=api_key)
             # bumped to 3-flash-preview
-            chat = client.chats.create(model='gemini-3-flash-preview')
+            chat = client.chats.create(model='gemini-flash-latest')
         except Exception as e:
             print(json.dumps({"error": f"Init failed: {str(e)}"}), flush=True)
     else:
