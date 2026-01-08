@@ -47,15 +47,15 @@ PluginComponent {
     }
 
     property ListModel chatModel: ListModel { }
-    
+    property ListModel availableAisModel: ListModel { }
+
 
     ChatBackendChat {
-        id: backend
+        id: backendChat
         apiKey: pluginData.geminiApiKey || ""
         running: false 
         onNewMessage: (text, isError) => {
             root.isLoading = false;
-
             chatModel.append({
                 "text": text,
                 "isUser": false,
@@ -64,11 +64,36 @@ PluginComponent {
         }
     }
 
+    ChatBackendSettings {
+        id: backendSettings
+        apiKey: pluginData.geminiApiKey || ""
+        running: false
+
+        onNewMessage: (text, isError) => {
+            console.log('got new settings message:', text, isError);
+            try {
+                var data = JSON.parse(text);
+                for (var i = 0; i < data.length; i++) {
+                    availableAisModel.append(data[i]); // Append each item to the ListModel
+                }
+
+                console.log('models set to ', availableAisModel);
+            } catch (err) {
+                console.error('failed to set models:', err)
+            }
+        }
+
+
+    }
+
     Component.onCompleted: {
         // Delay start to ensure pluginData is ready and env vars are set
+        
         Qt.callLater(() => {
             if (pluginData.geminiApiKey) {
-                backend.running = true
+                console.log('running backends now!?')
+                backendChat.running = true
+                backendSettings.running = true
             }
         })
     }
@@ -82,7 +107,7 @@ PluginComponent {
         chatModel.append({ "text": message, "isUser": true, "shouldAnimate": false });
         root.isLoading = true;
 
-        backend.sendMessage(message);
+        backendChat.sendMessage(message);
     }
 
     function getPopoutContent() {
@@ -90,6 +115,7 @@ PluginComponent {
         console.log(pluginData.geminiApiKey)
         console.log('key?', key)
         if (key && key !== "") {
+            console.log('i guess we got an api key!?')
             return chatPopout;
         } else {
             console.log("No API key set - is there a toast service!?"); 
@@ -204,15 +230,15 @@ PluginComponent {
                     // Display a small combo box at the bottom to change the model dynamically.
                     ComboBox {
                         id: cbModelSelector
-                        model: [
+                        model: availableAisModel /* [ 
                             { value: 1, text: "Model 1" },
                             { value: 2, text: "Model 2" },
                             { value: 3, text: "Model 3" }
-                        ]
+                        ]*/
 
                         width: parent.width
-                        textRole: "text"
-                        valueRole: "value"
+                        textRole: "display_name"
+                        valueRole: "name"
                         flat: true
                         height: 40
 

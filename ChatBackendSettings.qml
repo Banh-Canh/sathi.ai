@@ -18,16 +18,17 @@ Process {
 
         onRead: function(message) { 
             try {
-                const response = JSON.parse(message);
-                return response
+                return root.newMessage(message, false);
             } catch (err) {
                 console.warn("Failed to parse backend response:", err, message);
+                return root.newMessage("Error: Invalid response from backend", true);
             }
         }
     }
 
     stderr: SplitParser {
         onRead: line => {
+            console.log('error reading?')
             if (line.trim()) {
                 ToastService.showError("Script error", line)
             }
