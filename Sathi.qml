@@ -16,6 +16,7 @@ PluginComponent {
     property string aiModel: pluginData.aiModel || "gemini-flash-latest"
     property bool useGrounding: true
     property string systemPrompt: pluginData.systemPrompt || "You are a helpful assistant. Answer concisely. The chat client you are running in is small so keep answers brief. For context the current date is " + (new Date()).toDateString() + "." 
+    property string pendingInputText: ""
 
     horizontalBarPill: Component {
         Row {
@@ -137,6 +138,7 @@ PluginComponent {
                 if (visible) {
                     console.log("PopoutComponent visible");
                      chatInput.forceActiveFocus();
+                     chatInput.cursorPosition = chatInput.length;
                 }
             }            
 
@@ -205,7 +207,9 @@ PluginComponent {
                     ChatInput {
                         id: chatInput
                         width: parent.width
-                        focus: true
+                        text: root.pendingInputText
+                        onTextChanged: root.pendingInputText = text
+
                         // anchors.bottomMargin: Theme.spacingL
                         // anchors.margins: Theme.spacingL
                         onAccepted: {
@@ -213,6 +217,10 @@ PluginComponent {
                             console.log("User input:", text); 
                             root.processMessage(text);
                             
+                            text = ""; // Clear input after processing
+                             // Explicitly clear parent property just to be safe, 
+                             // though the binding above should verify it via onTextChanged
+                             root.pendingInputText = ""
                             text = ""; // Clear input after processing
                         }
                     }
