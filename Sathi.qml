@@ -11,18 +11,18 @@ PluginComponent {
 
     layerNamespacePlugin: "dank:sathi-ai"
 
-    property var displayedEmojis: ["✨"]
+    property var displayText: "✨"
     property bool isLoading: false
-    
+    property string aiModel: pluginData.aiModel || "gemini-flash-latest"
+
     horizontalBarPill: Component {
         Row {
             spacing: Theme.spacingXS
-            Repeater {
-                model: root.displayedEmojis
-                StyledText {
-                    text: modelData
-                    font.pixelSize: Theme.fontSizeLarge
-                }
+            StyledText {
+                text: root.displayText
+                font.pixelSize: Theme.fontSizeMedium
+                color: Theme.surfaceText
+                anchors.verticalCenter: parent.verticalCenter
             }
         }
     }
@@ -30,13 +30,11 @@ PluginComponent {
     verticalBarPill: Component {
         Column {
             spacing: Theme.spacingXS
-            Repeater {
-                model: root.displayedEmojis
-                StyledText {
-                    text: modelData
-                    font.pixelSize: Theme.fontSizeMedium
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
+            StyledText {
+                text: root.displayText
+                font.pixelSize: Theme.fontSizeMedium
+                color: Theme.surfaceText
+                anchors.verticalCenter: parent.verticalCenter
             }
         }
     }
@@ -45,20 +43,14 @@ PluginComponent {
     property ListModel availableAisModel: ListModel { }
 
 
-
     ChatBackendChat {
         id: backendChat
         apiKey: pluginData.geminiApiKey || ""
         running: false 
+        model: root.aiModel
+
         onNewMessage: (text, isError) => {
             root.isLoading = false;
-            // Remove the thinking bubble if it exists
-            if (chatModel.count > 0) {
-                 var last = chatModel.get(chatModel.count - 1);
-                 if (last.isThinking === true) {
-                     chatModel.remove(chatModel.count - 1);
-                 }
-            }
             chatModel.append({
                 "text": text,
                 "isUser": false,
@@ -72,7 +64,6 @@ PluginComponent {
         id: backendSettings
         apiKey: pluginData.geminiApiKey || ""
         running: false
-
         onNewMessage: (text, isError) => {
             console.log('got new settings message:', text, isError);
             try {
@@ -118,6 +109,7 @@ PluginComponent {
 
     function getPopoutContent() {
         const key = pluginData.geminiApiKey;
+        console.log(key, 'do i have a key!?', pluginData)
         if (key && key !== "") {
             console.log('i guess we got an api key!?')
             return chatPopout;
@@ -232,11 +224,10 @@ PluginComponent {
                         valueRole: "name"
 
                         onActivated: {
-                            console.log('model changed to:', currentValue);
-                            getData('aiModel');
-                            setData('aiModel', currentValue);
-
-                            console.log('current value is now:', getData('aiModel'));
+                            if (pluginService) {
+                                root.aiModel = currentValue
+                                pluginService.savePluginData(pluginId, "aiModel", currentValue)
+                            }
                         }
                     }
                 }

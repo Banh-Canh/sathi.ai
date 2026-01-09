@@ -8,8 +8,9 @@ Process {
     signal newMessage(string text, bool isError)
 
     property string pluginPath: Qt.resolvedUrl(".").toString().replace("file://", "")
+    property string model
 
-    environment: { "GEMINI_API_KEY": apiKey }
+    environment: { "GEMINI_API_KEY": apiKey, "GEMINI_MODEL": model }
     command: [pluginPath + "backend/.venv/bin/python3", "-u", pluginPath + "backend/main.py"]
     
     running: false
@@ -57,5 +58,13 @@ Process {
         } else {
             root.newMessage("Error: Backend not running", true);
         }
+    }
+
+    onModelChanged: {
+        console.log('model changed to:', root.model);
+
+        root.running = false
+        root.running = true
+        
     }
 }

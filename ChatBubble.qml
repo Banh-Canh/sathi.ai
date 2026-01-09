@@ -70,6 +70,7 @@ DankRectangle {
         textFormat: TextEdit.MarkdownText
         readOnly: true
         selectByMouse: true
+        tabStopDistance: 5 //Theme.spacingXS // Adjust this value to change tab width
         onLinkActivated: link => Qt.openUrlExternally(link)
         
         // Use full available width minus padding

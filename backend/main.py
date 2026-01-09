@@ -17,6 +17,13 @@ def main():
             models = client.models.list()
             model_list = []
             for m in models:
+                if hasattr(m, 'supported_actions'):
+                    if 'generateContent' not in m.supported_actions:
+                        continue
+                
+                if hasattr(m, 'thinking') and m.thinking is False:
+                    continue
+
                 name = m.name
                 
                 if name.startswith("models/"):
@@ -35,6 +42,7 @@ def main():
         return
 
     api_key = os.environ.get("GEMINI_API_KEY")
+    model = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
     chat = None
     client = None
 
@@ -42,7 +50,7 @@ def main():
         try:
             client = genai.Client(api_key=api_key)
             # bumped to 3-flash-preview
-            chat = client.chats.create(model='gemini-flash-latest')
+            chat = client.chats.create(model=model)
         except Exception as e:
             print(json.dumps({"error": f"Init failed: {str(e)}"}), flush=True)
     else:
