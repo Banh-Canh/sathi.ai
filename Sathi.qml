@@ -135,6 +135,13 @@ PluginComponent {
             id: popoutColumn
             showCloseButton: true
 
+            onVisibleChanged: {
+                if (visible) {
+                    console.log("PopoutComponent visible");
+                     chatInput.forceActiveFocus();
+                }
+            }
+
             
 
             Item {
@@ -201,6 +208,7 @@ PluginComponent {
                     ChatInput {
                         id: chatInput
                         width: parent.width
+                        focus: true
                         // anchors.bottomMargin: Theme.spacingL
                         // anchors.margins: Theme.spacingL
                         onAccepted: {
