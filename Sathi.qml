@@ -1,15 +1,10 @@
 import QtQuick
-import QtQuick.Controls
 import Quickshell
 import Quickshell.Widgets
-import Quickshell.Io
 import qs.Common
-import qs.Modals.Spotlight
-import qs.Modules.AppDrawer
 import qs.Services
 import qs.Widgets
 import qs.Modules.Plugins
-import "."
 
 PluginComponent {
     id: root
@@ -47,15 +42,15 @@ PluginComponent {
     }
 
     property ListModel chatModel: ListModel { }
-    
+    property ListModel availableAisModel: ListModel { }
 
-    ChatBackend {
-        id: backend
+
+    ChatBackendChat {
+        id: backendChat
         apiKey: pluginData.geminiApiKey || ""
         running: false 
         onNewMessage: (text, isError) => {
             root.isLoading = false;
-
             chatModel.append({
                 "text": text,
                 "isUser": false,
@@ -64,11 +59,36 @@ PluginComponent {
         }
     }
 
+    ChatBackendSettings {
+        id: backendSettings
+        apiKey: pluginData.geminiApiKey || ""
+        running: false
+
+        onNewMessage: (text, isError) => {
+            console.log('got new settings message:', text, isError);
+            try {
+                var data = JSON.parse(text);
+                for (var i = 0; i < data.length; i++) {
+                    availableAisModel.append(data[i]); // Append each item to the ListModel
+                }
+
+                console.log('models set to ', availableAisModel);
+            } catch (err) {
+                console.error('failed to set models:', err)
+            }
+        }
+
+
+    }
+
     Component.onCompleted: {
         // Delay start to ensure pluginData is ready and env vars are set
+        
         Qt.callLater(() => {
             if (pluginData.geminiApiKey) {
-                backend.running = true
+                console.log('running backends now!?')
+                backendChat.running = true
+                backendSettings.running = true
             }
         })
     }
@@ -82,7 +102,7 @@ PluginComponent {
         chatModel.append({ "text": message, "isUser": true, "shouldAnimate": false });
         root.isLoading = true;
 
-        backend.sendMessage(message);
+        backendChat.sendMessage(message);
     }
 
     function getPopoutContent() {
@@ -90,6 +110,7 @@ PluginComponent {
         console.log(pluginData.geminiApiKey)
         console.log('key?', key)
         if (key && key !== "") {
+            console.log('i guess we got an api key!?')
             return chatPopout;
         } else {
             console.log("No API key set - is there a toast service!?"); 
@@ -136,8 +157,8 @@ PluginComponent {
                     anchors.top: parent.top
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    anchors.bottom: chatInput.top
-                    anchors.bottomMargin: Theme.spacingMedium
+                    anchors.bottom: columnBottomSection.top
+                    anchors.bottomMargin: Theme.spacingL
                    
                     contentWidth: width
                     contentHeight: chatColumn.height
@@ -172,20 +193,53 @@ PluginComponent {
                     }
                 }
 
-                // Dank Textfield at the bottom for user input
-                ChatInput {
-                    id: chatInput
+                Column { 
+                    id: columnBottomSection
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
-                    anchors.margins: Theme.spacingLarge
-                              
-                    onAccepted: {
-                        // Handle the input text here
-                        console.log("User input:", text); 
-                        root.processMessage(text);
-                        
-                        text = ""; // Clear input after processing
+                    anchors.margins: Theme.spacingL
+                    // anchors.bottomMargin: Theme.spacingL
+                    // bottomPadding: 20
+                    
+                    spacing: Theme.spacingXS
+                    
+                    width: parent.width
+                    // height: 75
+
+                    // Dank Textfield at the bottom for user input
+                    ChatInput {
+                        id: chatInput
+                        width: parent.width
+                        // anchors.bottomMargin: Theme.spacingL
+                        // anchors.margins: Theme.spacingL
+                        onAccepted: {
+                            // Handle the input text here
+                            console.log("User input:", text); 
+                            root.processMessage(text);
+                            
+                            text = ""; // Clear input after processing
+                        }
+                    }
+
+                    // Display a small combo box at the bottom to change the model dynamically.
+                    AiSelector {
+                        id: cbModelSelector
+                        model: availableAisModel
+                        maxPopupHeight: popoutColumn.height * 0.6
+
+                        currentValue: pluginData.aiModel ||  "gemini-flash-latest"
+                        width: parent.width
+                        textRole: "display_name"
+                        valueRole: "name"
+
+                        onActivated: {
+                            console.log('model changed to:', currentValue);
+                            getData('aiModel');
+                            setData('aiModel', currentValue);
+
+                            console.log('current value is now:', getData('aiModel'));
+                        }
                     }
                 }
             }
