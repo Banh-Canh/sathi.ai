@@ -75,7 +75,6 @@ PluginComponent {
         apiKey: pluginData.geminiApiKey || ""
         running: false
         onNewMessage: (text, isError) => {
-            console.log('got new settings message:', text, isError);
             try {
                 var data = JSON.parse(text);
                 for (var i = 0; i < data.length; i++) {
@@ -105,9 +104,6 @@ PluginComponent {
 
 
     function processMessage(message) {
-        console.log(pluginData.geminiApiKey);
-        console.log(pluginData);        
-
         if (message === "") return;
 
         chatModel.append({ "text": message, "isUser": true, "shouldAnimate": false, "isThinking": false });
@@ -119,12 +115,11 @@ PluginComponent {
 
     function getPopoutContent() {
         const key = pluginData.geminiApiKey;
-        console.log(key, 'do i have a key!?', pluginData)
+
         if (key && key !== "") {
-            console.log('i guess we got an api key!?')
             return chatPopout;
         } else {
-            console.log("No API key set - is there a toast service!?"); 
+            // console.log("No API key set - is there a toast service!?"); 
             ToastService.showError("Script failed", "Exit code: " + exitCode)
         }
     }

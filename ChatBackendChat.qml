@@ -6,7 +6,7 @@ Item {
 
     property string apiKey: ""
     property bool running: false
-    property string model: "gemini-1.5-flash"
+    property string model: ""
     property bool useGrounding: false
 
     signal newMessage(string text, bool isError)
