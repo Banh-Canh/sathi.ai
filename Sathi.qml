@@ -43,6 +43,7 @@ PluginComponent {
     property ListModel availableAisModel: ListModel { }
 
 
+
     ChatBackendChat {
         id: backendChat
         apiKey: pluginData.geminiApiKey || ""
@@ -51,6 +52,13 @@ PluginComponent {
 
         onNewMessage: (text, isError) => {
             root.isLoading = false;
+            // Remove the thinking bubble if it exists
+            if (chatModel.count > 0) {
+                 var last = chatModel.get(chatModel.count - 1);
+                 if (last.isThinking === true) {
+                     chatModel.remove(chatModel.count - 1);
+                 }
+            }
             chatModel.append({
                 "text": text,
                 "isUser": false,
@@ -101,6 +109,7 @@ PluginComponent {
         if (message === "") return;
 
         chatModel.append({ "text": message, "isUser": true, "shouldAnimate": false, "isThinking": false });
+        chatModel.append({ "text": message, "isUser": true, "shouldAnimate": false, "isThinking": false });
         root.isLoading = true;
         chatModel.append({ "text": "", "isUser": false, "shouldAnimate": true, "isThinking": true });
 
@@ -126,6 +135,16 @@ PluginComponent {
         PopoutComponent {
             id: popoutColumn
             showCloseButton: true
+
+            onVisibleChanged: {
+                if (visible) {
+                    console.log("PopoutComponent visible");
+                     chatInput.forceActiveFocus();
+                }
+            }
+
+            
+
 
             onVisibleChanged: {
                 if (visible) {
@@ -167,12 +186,14 @@ PluginComponent {
                         
                         onHeightChanged: flickable.scrollToBottom()
                         
+                        
                         Repeater {
                             model: root.chatModel
                             delegate: ChatBubble {
                                 text: model.text
                                 isUser: model.isUser
                                 shouldAnimate: model.shouldAnimate
+                                isThinking: model.isThinking !== undefined ? model.isThinking : false
                                 isThinking: model.isThinking !== undefined ? model.isThinking : false
                                 width: chatColumn.width - (chatColumn.padding * 2)
                                 onAnimationCompleted: model.shouldAnimate = false
@@ -200,6 +221,7 @@ PluginComponent {
                     ChatInput {
                         id: chatInput
                         width: parent.width
+                        focus: true
                         focus: true
                         // anchors.bottomMargin: Theme.spacingL
                         // anchors.margins: Theme.spacingL
