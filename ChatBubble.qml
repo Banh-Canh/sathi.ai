@@ -1,6 +1,9 @@
 import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import qs.Common 
 import qs.Widgets
+import "ThinkingPhrases.js" as ThinkingPhrases
 
 
 DankRectangle {
@@ -8,10 +11,23 @@ DankRectangle {
     property string text: ""
     property bool isUser: false
     property bool shouldAnimate: false
-    property bool isThinking: false // Added property
+    property bool isThinking: false 
     property string displayedText: ""
+    property string currentThinkingPhrase: "Thinking..."
     
     signal animationCompleted()
+
+    function updateThinkingPhrase() {
+        root.currentThinkingPhrase = ThinkingPhrases.getRandomPhrase() + "...";
+    }
+
+    Timer {
+        id: thinkingTimer
+        interval: 3000
+        repeat: true
+        running: root.isThinking
+        onTriggered: root.updateThinkingPhrase()
+    }
 
     Timer {
         id: typeWriterTimer
@@ -40,7 +56,10 @@ DankRectangle {
 
 
     Component.onCompleted: {
-        if (root.isThinking) return; // Skip if thinking
+        if (root.isThinking) {
+             updateThinkingPhrase();
+             return;
+        }
 
         if (root.isUser || !root.shouldAnimate) {
             root.displayedText = root.text;
@@ -53,7 +72,7 @@ DankRectangle {
     // @todo we want to address the bubble width so that its the total width of the child + padding 
     // unfortunately my attempts at this didn't work yet. So we'll keep the width fixed to its parent.
     width: parent.width 
-    height: (root.isThinking ? thinkingAnim.height : msgText.height) + (Theme.spacingL * 2)
+    height: contentLayout.height + (Theme.spacingL * 2)
 
     // Alignment in the Column
     anchors.right: root.isUser ? parent.right : undefined
@@ -61,36 +80,47 @@ DankRectangle {
     
     color: root.isUser ? Theme.surfaceContainerHighest : Theme.surfaceContainerHigh
     radius: Theme.cornerRadius
-    
 
-    TextEdit {
-        id: msgText
-        visible: !root.isThinking // Hide if thinking
-        text: root.displayedText
-        textFormat: TextEdit.MarkdownText
-        readOnly: true
-        selectByMouse: true
-        tabStopDistance: 5 //Theme.spacingXS // Adjust this value to change tab width
-        onLinkActivated: link => Qt.openUrlExternally(link)
-        
-        // Use full available width minus padding
-        width: root.width - (Theme.spacingL * 2)
-        wrapMode: TextEdit.Wrap
-        
-        anchors.centerIn: parent
-        color: Theme.surfaceText
-        font.pixelSize: Theme.fontSizeMedium
-    }
+    RowLayout {
+        id: contentLayout
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.margins: Theme.spacingL
+        spacing: Theme.spacingM
 
-    AnimatedImage {
-        id: thinkingAnim
-        visible: root.isThinking
-        source: "thinking.gif"
-        width: Theme.spacingXL * 1.5
-        height: Theme.spacingXL *  1.5
-        fillMode: Image.PreserveAspectFit
-        anchors.centerIn: parent
-        playing: root.isThinking
+        BusyIndicator {
+            id: thinkingAnim
+            visible: root.isThinking
+            running: root.isThinking
+            Layout.preferredWidth: Theme.spacingXL 
+            Layout.preferredHeight: Theme.spacingXL 
+            Layout.alignment: Qt.AlignTop
+            
+            // Attempt to colorize based on style
+            palette.dark: Theme.primary 
+            palette.text: Theme.primary
+        }
+
+        TextEdit {
+            id: msgText
+            visible: true 
+            text: root.isThinking ? root.currentThinkingPhrase : root.displayedText
+            textFormat: TextEdit.MarkdownText
+            readOnly: true
+            selectByMouse: true
+            tabStopDistance: 5
+            onLinkActivated: link => Qt.openUrlExternally(link)
+            
+            Layout.fillWidth: true 
+            wrapMode: TextEdit.Wrap
+            
+            color: root.isThinking ? Theme.primary : Theme.surfaceText
+            opacity: root.isThinking ? 0.5 : 1.0
+            font.pixelSize: Theme.fontSizeMedium
+            font.italic: root.isThinking
+            Layout.alignment: Qt.AlignTop
+        }
     }
 
     Timer {
