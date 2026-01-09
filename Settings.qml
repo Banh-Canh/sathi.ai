@@ -38,4 +38,15 @@ PluginSettings {
         placeholder: "You are a helpful assistant..."
         defaultValue: "You are a helpful assistant. Answer concisely. The chat client you are running in is small so keep answers brief." 
     }
+
+    SelectionSetting {
+        settingKey: "resizeCorner"
+        label: "Resize Corner"
+        description: "Choose which corner of the window should be used for resizing."
+        options: [
+            { "label": "Bottom Right", "value": "right" },
+            { "label": "Bottom Left", "value": "left" }
+        ]
+        defaultValue: "right"
+    }
 }
