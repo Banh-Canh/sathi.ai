@@ -36,7 +36,7 @@ function clearHistory() {
 function listModels(callback) {
     var xhr = new XMLHttpRequest();
     var url = baseUrl + "/api/tags";
-    
+
     xhr.onreadystatechange = function() {
         if (xhr.readyState === XMLHttpRequest.DONE) {
             if (xhr.status === 200) {
@@ -49,7 +49,7 @@ function listModels(callback) {
                             // Prefix with ollama: to distinguish
                             var modelData = { 
                                 "name": "ollama:" + m.name, 
-                                "display_name": m.name + " (Ollama)",
+                                "display_name": m.name,
                                 "provider": "ollama"
                             };
                             models.push(modelData);
@@ -93,6 +93,8 @@ function sendMessage(text, callback) {
         messages: messages,
         stream: false 
     };
+    
+    console.log("Sending Ollama message with payload: ", JSON.stringify(payload));
 
     xhr.onreadystatechange = function() {
         if (xhr.readyState === XMLHttpRequest.DONE) {

@@ -19,6 +19,7 @@ PluginComponent {
     property string pendingInputText: ""
     property string resizeCorner: pluginData.resizeCorner || "right"
 
+
     horizontalBarPill: Component {
         Row {
             spacing: Theme.spacingXS
@@ -46,13 +47,10 @@ PluginComponent {
     property ListModel chatModel: ListModel { }
     property ListModel availableAisModel: ListModel { }
 
-
-
     ChatBackendChat {
         id: backendChat
-        apiKey: pluginData.geminiApiKey || ""
+        geminiApiKey: pluginData.geminiApiKey || ""
         ollamaUrl: pluginData.ollamaUrl || ""
-        running: false 
         model: root.aiModel
         useGrounding: root.useGrounding
         systemPrompt: root.systemPrompt
@@ -77,33 +75,19 @@ PluginComponent {
 
     ChatBackendSettings {
         id: backendSettings
-        apiKey: pluginData.geminiApiKey || ""
+        geminiApiKey: pluginData.geminiApiKey || ""
         ollamaUrl: pluginData.ollamaUrl || ""
-        running: false
-        onNewMessage: (text, isError) => {
+
+        onNewModels: (models, isError) => {
             try {
-                var data = JSON.parse(text);
+                var data = JSON.parse(models);
                 for (var i = 0; i < data.length; i++) {
                     availableAisModel.append(data[i]); // Append each item to the ListModel
                 }
-
-                console.log('models set to ', availableAisModel);
             } catch (err) {
                 console.error('failed to set models:', err)
             }
         }
-    }
-
-    Component.onCompleted: {
-        // Delay start to ensure pluginData is ready and env vars are set
-        
-        Qt.callLater(() => {
-            if (pluginData.geminiApiKey || pluginData.ollamaUrl) {
-                console.log('running backends now!?')
-                backendChat.running = true
-                backendSettings.running = true
-            }
-        })
     }
 
     function processMessage(message) {
@@ -232,7 +216,7 @@ PluginComponent {
                         model: availableAisModel
                         maxPopupHeight: popoutColumn.height * 0.6
 
-                        currentValue: pluginData.aiModel ||  "gemini-flash-latest"
+                        currentValue: pluginData.aiModel
                         width: parent.width
                         textRole: "display_name"
                         valueRole: "name"

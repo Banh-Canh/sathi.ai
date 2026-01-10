@@ -59,6 +59,8 @@ function listModels(callback) {
                             if (m.displayName) {
                                 modelData["display_name"] = m.displayName;
                             }
+
+                            modelData["provider"] = "gemini";
                             models.push(modelData);
                         }
                     }

@@ -2,9 +2,10 @@
 .import "gemini.js" as Gemini
 .import "ollama.js" as Ollama
 
-var currentModel = "";
 var ollamaUrl = "";
 var geminiKey = "";
+var loadedModels = {};
+var modelKey = "";
 
 function setGeminiApiKey(key) {
     geminiKey = key;
@@ -19,19 +20,24 @@ function setOllamaUrl(url) {
 function getOllamaModels(callback) {
     console.log("Fetching Ollama models from URL: " + ollamaUrl);
     Ollama.listModels((models, error) => {
-        console.log('Ollama Models:', models, 'Error:', error);
         processModels(models, callback, error);
     });
 }
 
 function getGeminiModels(callback) {
+    console.log("Fetching Gemini models with API Key: " + geminiKey);
     Gemini.listModels((models, error) => {
         processModels(models, callback, error);
     });
 }
 
 function setModel(model) {
-    currentModel = model;
+    console.log("Setting current model to: " + model);
+    modelKey = model;
+}
+
+function currentModel() {
+    return loadedModels[modelKey];
 }
 
 function processModels(models, callback, error) {
@@ -41,8 +47,13 @@ function processModels(models, callback, error) {
             setModel(models[0].name);
         }
 
+        for (var i = 0; i < models.length; i++) {
+            loadedModels[models[i].name] = models[i];
+        }
+
+
         callback(models, null);
-    }    
+    }  
 }
 
 function setUseGrounding(enabled) {
@@ -50,71 +61,31 @@ function setUseGrounding(enabled) {
 }
 
 function setSystemPrompt(prompt) {
-    Gemini.setSystemPrompt(prompt);
     Ollama.setSystemPrompt(prompt);
+    Gemini.setSystemPrompt(prompt);
 }
 
 function listModels(callback) {
-    var allModels = [];
-    var pending = 0;
-    var hasRun = false;
+    callback(loadedModels);
+}
 
-    function checkDone() {
-        if (pending === 0) {
-            callback(allModels, null);
-        }
+function getProvider() {
+    if (currentModel().provider === "ollama") {
+        return Ollama
+    } else if (currentModel().provider === "gemini") {
+        return Gemini
     }
     
-    // We defer execution slightly to allow both checks to register pending
-    // although JS is single threaded so synchronous blocks run to completion.
-    
-    if (geminiKey) {
-        pending++;
-        Gemini.listModels(function(models, error) {
-            pending--;
-            if (models) {
-                // Add provider tag if missing
-                for(var i=0; i<models.length; i++) {
-                    if (!models[i].provider) models[i].provider = "gemini";
-                }
-                allModels = allModels.concat(models);
-            } else {
-                 console.warn("Provider Gemini list error: " + error);
-            }
-            checkDone();
-        });
-    }
-
-    if (ollamaUrl) {
-         pending++;
-         Ollama.listModels(function(models, error) {
-             pending--;
-             if (models) {
-                 allModels = allModels.concat(models);
-             } else {
-                 console.warn("Provider Ollama list error: " + error);
-             }
-             checkDone();
-         });
-    }
-
-    if (pending === 0) {
-        callback([], null);
-    }
+    new Error("Unknown provider: " + currentModel().provider);
 }
 
 function sendMessage(text, callback) {
-    if (currentModel.indexOf("ollama:") === 0) {
-        if (!ollamaUrl) {
-             callback(null, "Ollama URL not configured");
-             return;
-        }
-        Ollama.sendMessage(text, callback);
-    } else {
-        if (!geminiKey) {
-            callback(null, "Gemini API Key missing");
-            return;
-        }
-        Gemini.sendMessage(text, callback);
+    if (!currentModel()) {
+        console.log("ModelKey: " + modelKey);
+        callback(null, "No model selected");
+        return;
     }
+
+    getProvider().setModel(currentModel().name);
+    getProvider().sendMessage(text, callback);
 }
