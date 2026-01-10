@@ -92,7 +92,6 @@ function sendMessage(text, callback) {
     var url = "https://generativelanguage.googleapis.com/v1beta/models/" + currentModel + 
         (useGrounding ? ":generateContent" : "");
     
-    console.log(url)
     xhr.onreadystatechange = function() {
         if (xhr.readyState === XMLHttpRequest.DONE) {
             if (xhr.status === 200) {

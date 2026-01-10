@@ -6,7 +6,7 @@ var currentModel = "";
 var ollamaUrl = "";
 var geminiKey = "";
 
-function setApiKey(key) {
+function setGeminiApiKey(key) {
     geminiKey = key;
     Gemini.setApiKey(key);
 }
@@ -16,10 +16,33 @@ function setOllamaUrl(url) {
     Ollama.setBaseUrl(url);
 }
 
+function getOllamaModels(callback) {
+    console.log("Fetching Ollama models from URL: " + ollamaUrl);
+    Ollama.listModels((models, error) => {
+        console.log('Ollama Models:', models, 'Error:', error);
+        processModels(models, callback, error);
+    });
+}
+
+function getGeminiModels(callback) {
+    Gemini.listModels((models, error) => {
+        processModels(models, callback, error);
+    });
+}
+
 function setModel(model) {
     currentModel = model;
-    Gemini.setModel(model);
-    Ollama.setModel(model);
+}
+
+function processModels(models, callback, error) {
+    if (models && models.length > 0) {
+        // Set default model to first available if none selected
+        if (currentModel === "") {
+            setModel(models[0].name);
+        }
+
+        callback(models, null);
+    }    
 }
 
 function setUseGrounding(enabled) {
