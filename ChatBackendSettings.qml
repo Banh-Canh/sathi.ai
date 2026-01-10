@@ -33,6 +33,10 @@ Item {
         }
     }
 
+    function isModelAvailable(modelName) {
+        return Providers.isModelLoaded(modelName);
+    }
+
     function fetchModels() {
         Providers.listModels(function(models, error) {
              // We can ignore partial errors as listModels tries its best

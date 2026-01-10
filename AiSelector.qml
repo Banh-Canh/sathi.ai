@@ -67,6 +67,25 @@ ComboBox {
             currentIndex: root.highlightedIndex
 
             ScrollIndicator.vertical: ScrollIndicator { }
+
+            section.property: "provider"
+            section.criteria: ViewSection.FullString
+            section.delegate: ItemDelegate {
+                width: ListView.view.width
+                height: 30
+                enabled: false
+                background: Rectangle {
+                    color: Theme.surfaceContainerHighest
+                }
+                contentItem: Text {
+                    text: section.toUpperCase()
+                    font.weight: Font.Bold
+                    color: Theme.primary
+                    font.pixelSize: Theme.fontSizeSmall
+                    verticalAlignment: Text.AlignVCenter
+                    leftPadding: Theme.spacingM
+                }
+            }
         }
 
         background: Rectangle {
