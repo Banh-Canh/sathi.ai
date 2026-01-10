@@ -73,7 +73,11 @@ function setSystemPrompt(prompt) {
 }
 
 function listModels(callback) {
-    callback(loadedModels);
+    var modelsList = [];
+    for (var key in loadedModels) {
+        modelsList.push(loadedModels[key]);
+    }
+    callback(modelsList);
 }
 
 function getProvider() {
