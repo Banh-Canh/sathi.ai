@@ -78,7 +78,7 @@ DankRectangle {
     anchors.right: root.isUser ? parent.right : undefined
     anchors.left: root.isUser ? undefined : parent.left
     
-    color: root.isUser ? Theme.surfaceContainerHighest : Theme.surfaceContainerHigh
+    color: root.isUser ?  Theme.primaryContainer : Theme.surfaceContainerHigh
     radius: Theme.cornerRadius
 
     RowLayout {
@@ -115,7 +115,7 @@ DankRectangle {
             Layout.fillWidth: true 
             wrapMode: TextEdit.Wrap
             
-            color: root.isThinking ? Theme.primary : Theme.surfaceText
+            color: root.isThinking ? Theme.primary : (root.isUser ? Theme.surfaceVariantText : Theme.surfaceText)
             opacity: root.isThinking ? 0.5 : 1.0
             font.pixelSize: Theme.fontSizeMedium
             font.italic: root.isThinking
