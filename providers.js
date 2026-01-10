@@ -25,7 +25,7 @@ function getOllamaModels(callback) {
 }
 
 function getGeminiModels(callback) {
-    console.log("Fetching Gemini models with API Key: " + geminiKey);
+    console.log("Fetching Gemini models...");
     Gemini.listModels((models, error) => {
         processModels(models, callback, error);
     });
@@ -41,9 +41,14 @@ function currentModel() {
 }
 
 function processModels(models, callback, error) {
+    if (error) {
+        callback(null, error);
+        return;
+    }
+
     if (models && models.length > 0) {
         // Set default model to first available if none selected
-        if (currentModel === "") {
+        if (modelKey === "") {
             setModel(models[0].name);
         }
 
@@ -53,7 +58,9 @@ function processModels(models, callback, error) {
 
 
         callback(models, null);
-    }  
+    } else {
+        callback([], null);
+    }
 }
 
 function setUseGrounding(enabled) {
@@ -70,13 +77,18 @@ function listModels(callback) {
 }
 
 function getProvider() {
-    if (currentModel().provider === "ollama") {
+    var model = currentModel();
+    if (!model) {
+        throw new Error("No model selected");
+    }
+
+    if (model.provider === "ollama") {
         return Ollama
-    } else if (currentModel().provider === "gemini") {
+    } else if (model.provider === "gemini") {
         return Gemini
     }
     
-    new Error("Unknown provider: " + currentModel().provider);
+    throw new Error("Unknown provider: " + model.provider);
 }
 
 function sendMessage(text, callback) {

@@ -94,8 +94,6 @@ function sendMessage(text, callback) {
         stream: false 
     };
     
-    console.log("Sending Ollama message with payload: ", JSON.stringify(payload));
-
     xhr.onreadystatechange = function() {
         if (xhr.readyState === XMLHttpRequest.DONE) {
             if (xhr.status === 200) {

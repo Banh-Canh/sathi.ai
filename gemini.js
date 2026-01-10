@@ -20,7 +20,6 @@ function setUseGrounding(enabled) {
 
 function setSystemPrompt(prompt) {
     systemPrompt = prompt;
-    console.log("System prompt set to: " + systemPrompt);
     
     clearHistory();
 
