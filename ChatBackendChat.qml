@@ -4,7 +4,7 @@ import "providers.js" as Providers
 Item {
     id: root
 
-    property string apiKey: ""
+    property string geminiApiKey: ""
     property string ollamaUrl: ""
     
     property bool running: false
@@ -14,8 +14,8 @@ Item {
 
     signal newMessage(string text, bool isError)
 
-    onApiKeyChanged: {
-        Providers.setApiKey(apiKey);
+    onGeminiApiKeyChanged: {
+        Providers.setGeminiApiKey(geminiApiKey);
     }
     
     onOllamaUrlChanged: {
@@ -23,6 +23,7 @@ Item {
     }
     
     onModelChanged: {
+        console.log("Model changed: " + model);
         Providers.setModel(model);
     }
 
@@ -31,28 +32,17 @@ Item {
     }
 
     onSystemPromptChanged: {
+        console.log("System prompt changed: " + systemPrompt);
         Providers.setSystemPrompt(systemPrompt);
-    }
-
-    onRunningChanged: {
-        // No-op or init
-        if (running) {
-             if (apiKey) Providers.setApiKey(apiKey);
-             if (ollamaUrl) Providers.setOllamaUrl(ollamaUrl);
-             
-             Providers.setModel(model);
-             Providers.setUseGrounding(useGrounding);
-             Providers.setSystemPrompt(systemPrompt);
-        }
     }
 
     function sendMessage(text) {
         Providers.sendMessage(text, function(response, error) {
-                if (error) {
-                    newMessage("Error: " + error, true);
-                } else {
-                    newMessage(response, false);
-                }
+            if (error) {
+                newMessage("Error: " + error, true);
+            } else {
+                newMessage(response, false);
+            }
         });
     }
 }

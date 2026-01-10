@@ -3,35 +3,37 @@ import "providers.js" as Providers
 
 Item {
     id: root
-    property string apiKey: ""
+    property string geminiApiKey: ""
     property string ollamaUrl: ""
-    property bool running: false
     
-    signal newMessage(string text, bool isError)
+    // signal newMessage(string text, bool isError)
+    signal newModels(string modelData)
 
-    onApiKeyChanged: {
-        Providers.setApiKey(apiKey);
-    }
-    
     onOllamaUrlChanged: {
         Providers.setOllamaUrl(ollamaUrl);
+        Providers.getOllamaModels(processModels);
     }
 
-    onRunningChanged: {
-        if (running) {
-             if (apiKey) Providers.setApiKey(apiKey);
-             if (ollamaUrl) Providers.setOllamaUrl(ollamaUrl);
-             fetchModels();
+    onGeminiApiKeyChanged: {
+        Providers.setGeminiApiKey(geminiApiKey);
+        Providers.getGeminiModels(processModels);
+    }
+
+    function processModels (models, error) {
+        if (models) {
+            newModels(JSON.stringify(models));
+        } else {
+            newModels("[]");
         }
     }
-    
+
     function fetchModels() {
         Providers.listModels(function(models, error) {
              // We can ignore partial errors as listModels tries its best
              if (models) {
-                 newMessage(JSON.stringify(models), false);
+                 newModels(JSON.stringify(models), false);
              } else {
-                 newMessage("[]", false);
+                 newModels("[]", false);
              }
         });
     }

@@ -33,40 +33,55 @@ function clearHistory() {
     history = [];
 }
 
-function listModels(callback) {
+function request(method, url, callback, data) {
     var xhr = new XMLHttpRequest();
-    var url = baseUrl + "/api/tags";
-    
     xhr.onreadystatechange = function() {
         if (xhr.readyState === XMLHttpRequest.DONE) {
             if (xhr.status === 200) {
                 try {
                     var response = JSON.parse(xhr.responseText);
-                    var models = [];
-                    if (response.models) {
-                        for (var i = 0; i < response.models.length; i++) {
-                            var m = response.models[i];
-                            // Prefix with ollama: to distinguish
-                            var modelData = { 
-                                "name": "ollama:" + m.name, 
-                                "display_name": m.name + " (Ollama)",
-                                "provider": "ollama"
-                            };
-                            models.push(modelData);
-                        }
-                    }
-                    callback(models, null);
+                    callback(response, null);
                 } catch (e) {
-                    callback(null, "Failed to parse Ollama models: " + e.message);
+                    callback(null, "Failed to parse response: " + e.message);
                 }
             } else {
                 callback(null, "Ollama HTTP Error: " + xhr.status);
             }
         }
     };
-    
-    xhr.open("GET", url);
-    xhr.send();
+    xhr.open(method, url);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    if (data) {
+        xhr.send(JSON.stringify(data));
+    } else {
+        xhr.send();
+    }
+}
+
+function listModels(callback) {
+    var url = baseUrl + "/api/tags";
+
+    request("GET", url, function(response, error) {
+        if (error) {
+            callback(null, error);
+            return;
+        }
+
+        var models = [];
+        if (response.models) {
+            for (var i = 0; i < response.models.length; i++) {
+                var m = response.models[i];
+                // Prefix with ollama: to distinguish
+                var modelData = { 
+                    "name": "ollama:" + m.name, 
+                    "display_name": m.name,
+                    "provider": "ollama"
+                };
+                models.push(modelData);
+            }
+        }
+        callback(models, null);
+    });
 }
 
 function sendMessage(text, callback) {
@@ -76,7 +91,6 @@ function sendMessage(text, callback) {
         content: text
     });
 
-    var xhr = new XMLHttpRequest();
     var url = baseUrl + "/api/chat";
     
     var messages = [];
@@ -93,36 +107,26 @@ function sendMessage(text, callback) {
         messages: messages,
         stream: false 
     };
-
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === XMLHttpRequest.DONE) {
-            if (xhr.status === 200) {
-                try {
-                    var response = JSON.parse(xhr.responseText);
-                    var responseText = "";
-                    
-                    if (response.message && response.message.content) {
-                        responseText = response.message.content;
-                        
-                        history.push({
-                            role: "assistant",
-                            content: responseText
-                        });
-                        
-                        callback(responseText, null);
-                    } else {
-                        callback(null, "Empty response from Ollama");
-                    }
-                } catch (e) {
-                    callback(null, "Failed to parse Ollama response: " + e.message);
-                }
-            } else {
-                callback(null, "Ollama HTTP Error: " + xhr.status);
-            }
-        }
-    };
     
-    xhr.open("POST", url);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.send(JSON.stringify(payload));
+    request("POST", url, function(response, error) {
+        if (error) {
+            callback(null, error);
+            return;
+        }
+
+        var responseText = "";
+        
+        if (response.message && response.message.content) {
+            responseText = response.message.content;
+            
+            history.push({
+                role: "assistant",
+                content: responseText
+            });
+            
+            callback(responseText, null);
+        } else {
+            callback(null, "Empty response from Ollama");
+        }
+    }, payload);
 }
