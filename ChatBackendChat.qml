@@ -36,18 +36,6 @@ Item {
         Providers.setSystemPrompt(systemPrompt);
     }
 
-    // onRunningChanged: {
-    //     // No-op or init
-    //     if (running) {
-    //          if (apiKey) Providers.setApiKey(apiKey);
-    //          if (ollamaUrl) Providers.setOllamaUrl(ollamaUrl);
-             
-    //          Providers.setModel(model);
-    //          Providers.setUseGrounding(useGrounding);
-    //          Providers.setSystemPrompt(systemPrompt);
-    //     }
-    // }
-
     function sendMessage(text) {
         Providers.sendMessage(text, function(response, error) {
             if (error) {
