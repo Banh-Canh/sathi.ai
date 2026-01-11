@@ -1,6 +1,6 @@
 # Sathi.Ai
 
-**Sathi** is a Generative AI client plugin designed for **Dank Material Linux**. It enables you to interact with Large Language Models (LLMs) directly from your desktop shell.
+**Sathi** is a Generative AI client plugin designed particularly for **Dank Material Shell**. It enables you to interact with Large Language Models (LLMs) directly from your desktop shell making it easy to ask questions, find commands without needing to switch apps or open a browser.
 
 https://github.com/user-attachments/assets/0e90c1ff-e7d1-4b15-98a0-434727c99665
 
@@ -11,6 +11,11 @@ https://github.com/user-attachments/assets/0e90c1ff-e7d1-4b15-98a0-434727c99665
 - 🎨 **Markdown Support**: Chat bubbles support markdown formatting and clickable links.
 - 🛠️ **Configurable**: Set your API keys and endpoints directly in settings.
 
+## Limitations 
+- Limited context to the last _x,y_ messages that can be set. (Running a dameon or service or even a process could work around this but complicates install and use.)
+- When listing models right now we get all available models offered by a service - many of which may not be useful. Users will need some idea of the model they want to use.
+- Sessions are cleared when logging out and not saved.
+
 ## Installation
 
 ### Prerequisites
@@ -20,6 +25,9 @@ https://github.com/user-attachments/assets/0e90c1ff-e7d1-4b15-98a0-434727c99665
 
 ### 1. Install Plugin Dependencies
 - Install the plugin to your plugins directory (`~/.config/DankMaterialShell/plugins`) by default.
+- Enable the plugin in the plugins screen.
+- Add the widget to your widgets tab. 
+- (Optional) - add a shortcut key to open the plugin ie in niri/config.kdl you can add something like: `Mod+Shift+Space { spawn-sh "dms ipc call widget toggle sathiAi"; }`
 
 
 ### 2. Configuration
