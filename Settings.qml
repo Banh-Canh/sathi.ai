@@ -62,7 +62,6 @@ PluginSettings {
         settingKey: "maxMessageHistory"
         label: "Max Context History"
         description: "Limits the number of messages sent to the AI. Higher values provide better context but may slow down responses."
-        // placeholder: "
         defaultValue: 20
         minimum: 2
         maximum: 100
