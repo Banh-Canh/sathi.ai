@@ -36,7 +36,7 @@ PluginSettings {
         label: "Ollama URL"
         description: "URL for your local Ollama instance (e.g. http://localhost:11434)"
         placeholder: "http://localhost:11434"
-        defaultValue: "http://localhost:11434"
+        defaultValue: ""
     }
 
     StringSetting {
