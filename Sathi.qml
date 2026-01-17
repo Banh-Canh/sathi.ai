@@ -19,7 +19,6 @@ PluginComponent {
     property string pendingInputText: ""
     property string resizeCorner: pluginData.resizeCorner || "right"
 
-
     horizontalBarPill: Component {
         Row {
             spacing: Theme.spacingXS
@@ -58,7 +57,7 @@ PluginComponent {
         }
 
         root.isModelAvailable = backendSettings.isModelAvailable(root.aiModel);
-        console.log("Model availability for " + root.aiModel + ": " + root.isModelAvailable);
+        console.debug("Model availability for " + root.aiModel + ": " + root.isModelAvailable);
     }
 
     ChatBackendChat {
@@ -66,10 +65,15 @@ PluginComponent {
         geminiApiKey: pluginData.geminiApiKey || ""
         openaiApiKey: pluginData.openaiApiKey || ""
         ollamaUrl: pluginData.ollamaUrl || ""
+        persistChatHistory: pluginData.persistChatHistory
+
         model: root.aiModel
         useGrounding: root.useGrounding
         systemPrompt: root.systemPrompt
         maxHistory: pluginData.maxMessageHistory || 20
+
+        pluginId: root.pluginId
+        pluginService: root.pluginService
 
         onNewMessage: (text, isError) => {
             root.isLoading = false;
@@ -86,6 +90,20 @@ PluginComponent {
                 "shouldAnimate": true,
                 "isThinking": false
             });
+            root.pruneUiHistory();
+        }
+
+        onChatHistoryLoaded: (chatHistory) => {
+            console.debug("Chat history loaded:", chatHistory);
+            for (var i = 0; i < chatHistory.length; i++) {
+                var message = chatHistory[i];
+                chatModel.append({
+                    "text": message.content,
+                    "isUser": message.role === "user",
+                    "shouldAnimate": false,
+                    "isThinking": false
+                });
+            }
             root.pruneUiHistory();
         }
     }
@@ -136,9 +154,9 @@ PluginComponent {
 
             onVisibleChanged: {
                 if (visible) {
-                    console.log("PopoutComponent visible");
-                     chatInput.forceActiveFocus();
-                     chatInput.cursorPosition = chatInput.length;
+                    console.debug("PopoutComponent visible");
+                    chatInput.forceActiveFocus();
+                    chatInput.cursorPosition = chatInput.length;
                 }
             }            
 
@@ -248,7 +266,7 @@ PluginComponent {
                         // anchors.margins: Theme.spacingL
                         onAccepted: {
                             // Handle the input text here
-                            console.log("User input:", text); 
+                            console.debug("User input:", text); 
                             root.processMessage(text);
                             
                             text = ""; // Clear input after processing
