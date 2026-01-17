@@ -1,6 +1,8 @@
 import QtQuick
 import Quickshell
 import Quickshell.Widgets
+import Quickshell.Io
+
 import qs.Common
 import qs.Services
 import qs.Widgets
@@ -18,7 +20,6 @@ PluginComponent {
     property string systemPrompt: pluginData.systemPrompt || "You are a helpful assistant. Answer concisely. The chat client you are running in is small so keep answers brief. For context the current date is " + (new Date()).toDateString() + "." 
     property string pendingInputText: ""
     property string resizeCorner: pluginData.resizeCorner || "right"
-
 
     horizontalBarPill: Component {
         Row {
@@ -47,6 +48,25 @@ PluginComponent {
     property ListModel availableAisModel: ListModel { }
     property bool isModelAvailable: true
 
+    // When trying to access the visibility of the popout from within other functions
+    // chatPopout.visible always returned false or something weird, not sure if thats a bug
+    // or intended but this workaround seems to do the trick.
+    QtObject {
+        id: internalProps
+        property bool isPopoutVisible: chatPopout.visible
+    }
+
+    Process {
+        id: hiddenNotificationProcess
+        property string message: ""
+        command: ["notify-send", 
+            "-i", Qt.resolvedUrl('./assets/star.png').toString().replace("file://", ""), 
+            "SathiAI",
+            message.substring(0, 100) + (message.length > 100 ? "..." : "")
+        ]
+        running: false
+    }
+
     onAvailableAisModelChanged: {
         root.checkModelAvailability();
     }
@@ -58,7 +78,23 @@ PluginComponent {
         }
 
         root.isModelAvailable = backendSettings.isModelAvailable(root.aiModel);
-        console.log("Model availability for " + root.aiModel + ": " + root.isModelAvailable);
+        console.debug("Model availability for " + root.aiModel + ": " + root.isModelAvailable);
+    }
+
+    function showMessageAlertIfHidden(message) {
+        if (!pluginData.showMessageAlerts) {
+            return;
+        }
+        
+        // For some reason we can't just check chatPopout.visible directly here?
+        // So we're using internalProps as a workaround..
+        if (internalProps.isPopoutVisible && !hiddenNotificationProcess.running) {
+            return
+        }
+
+        console.debug("Showing hidden message notification:", message)
+        hiddenNotificationProcess.message = message
+        hiddenNotificationProcess.running = true
     }
 
     ChatBackendChat {
@@ -66,10 +102,15 @@ PluginComponent {
         geminiApiKey: pluginData.geminiApiKey || ""
         openaiApiKey: pluginData.openaiApiKey || ""
         ollamaUrl: pluginData.ollamaUrl || ""
+        persistChatHistory: pluginData.persistChatHistory
+
         model: root.aiModel
         useGrounding: root.useGrounding
         systemPrompt: root.systemPrompt
         maxHistory: pluginData.maxMessageHistory || 20
+
+        pluginId: root.pluginId
+        pluginService: root.pluginService
 
         onNewMessage: (text, isError) => {
             root.isLoading = false;
@@ -86,6 +127,23 @@ PluginComponent {
                 "shouldAnimate": true,
                 "isThinking": false
             });
+
+            root.pruneUiHistory();
+            
+            root.showMessageAlertIfHidden(text);
+        }
+
+        onChatHistoryLoaded: (chatHistory) => {
+            console.debug("Chat history loaded:", chatHistory);
+            for (var i = 0; i < chatHistory.length; i++) {
+                var message = chatHistory[i];
+                chatModel.append({
+                    "text": message.content,
+                    "isUser": message.role === "user",
+                    "shouldAnimate": false,
+                    "isThinking": false
+                });
+            }
             root.pruneUiHistory();
         }
     }
@@ -136,10 +194,11 @@ PluginComponent {
 
             onVisibleChanged: {
                 if (visible) {
-                    console.log("PopoutComponent visible");
-                     chatInput.forceActiveFocus();
-                     chatInput.cursorPosition = chatInput.length;
+                    chatInput.forceActiveFocus();
+                    chatInput.cursorPosition = chatInput.length;
                 }
+
+                internalProps.isPopoutVisible = visible;
             }            
 
             Item {
@@ -189,7 +248,8 @@ PluginComponent {
                     anchors.right: parent.right
                     anchors.bottom: columnBottomSection.top
                     anchors.bottomMargin: Theme.spacingL
-                   
+                    anchors.margins: Theme.spacingL
+                    
                     contentWidth: width
                     contentHeight: chatColumn.height
                     clip: true
@@ -248,7 +308,7 @@ PluginComponent {
                         // anchors.margins: Theme.spacingL
                         onAccepted: {
                             // Handle the input text here
-                            console.log("User input:", text); 
+                            console.debug("User input:", text); 
                             root.processMessage(text);
                             
                             text = ""; // Clear input after processing

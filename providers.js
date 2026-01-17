@@ -13,11 +13,35 @@ var modelKey = "";
 var masterHistory = []; 
 var systemPrompt = "";
 var maxHistory = 20;
+var persistChatHistory = false;
+
+// Required for saving and loading data.
+var pluginId = "";
+var pluginService = null;
 
 function setMaxHistory(max) {
     console.log("Setting max history to: " + max);
     maxHistory = max;
 }
+
+function setPersistChatHistory(enabled) {
+    console.log("Setting persistChatHistory to: " + enabled);
+
+    persistChatHistory = enabled;
+    
+    // We should clear our messages if we've been turned off and save them if we've been turned on.
+    enabled ? saveChatHistory() : clearSavedChatHistory();
+}
+
+function clearSavedChatHistory() {
+    if (!pluginService || !pluginId) {
+        return;
+    }
+    
+    console.log("Clearing saved chat history.");
+    pluginService.savePluginData(pluginId, "chatHistory", null);
+}
+
 
 function setGeminiApiKey(key) {
     geminiKey = key;
@@ -158,6 +182,9 @@ function sendMessage(text, callback) {
     // Enforce limit
     pruneHistory();
     
+    // Save history
+    saveChatHistory();
+
     console.log("Sending chat. History length: " + masterHistory.length + ". Provider " + currentModel().provider);
 
     getProvider().setModel(currentModel().name);
@@ -166,10 +193,82 @@ function sendMessage(text, callback) {
         if (response) {
             masterHistory.push({ role: "model", content: response });
             pruneHistory();
-             console.log("Chat response received. Total history: " + masterHistory.length);
+            saveChatHistory();
+            console.log("Chat response received. Total history: " + masterHistory.length);
         }
         callback(response, error);
     });
+}
+
+/**
+ * Saves the current chat history to persistent storage.
+ * 
+ * This function serializes the masterHistory array to JSON and saves it using the
+ * plugin service. The save operation only occurs if chat history persistence is
+ * enabled (persistChatHistory is true) and the plugin service is available.
+ * 
+ * @returns {void}
+ */
+function saveChatHistory() {
+    if (!persistChatHistory || !pluginService || !pluginId) {
+        return;
+    }
+
+    console.log("Saving chat history. Length: " + masterHistory.length);
+    var chatHistory = JSON.stringify(masterHistory);
+
+    // Save chat history
+    pluginService.savePluginData(pluginId, "chatHistory", chatHistory);
+}
+
+/**
+ * Loads previously saved chat history from persistent storage.
+ * 
+ * This function retrieves chat history from the plugin service and deserializes it
+ * from JSON into the masterHistory array. The function includes safeguards to:
+ * - Return an empty array if persistence is disabled or plugin service is unavailable
+ * - Skip reloading if masterHistory already contains messages (returns existing masterHistory)
+ * - Handle JSON parsing errors gracefully by resetting to an empty array
+ * 
+ * @returns {Array} The loaded chat history array. Returns an empty array if:
+ *   - Chat history persistence is disabled (persistChatHistory is false)
+ *   - Plugin service is not available
+ *   - No saved history exists
+ *   - JSON parsing fails
+ *   Returns existing masterHistory if it's already loaded (length > 0).
+ */
+function loadChatHistory() {
+    console.debug("Attempting to load chat history.");
+    if (!persistChatHistory || !pluginService || !pluginId) {
+        return [];
+    }
+
+    if (masterHistory.length > 0) {
+        console.warn("Chat history already loaded, skipping reload.");
+        return masterHistory;
+    }
+
+    var chatHistory = pluginService.loadPluginData(pluginId, "chatHistory");
+    
+    if (chatHistory) {
+        try {
+            masterHistory = JSON.parse(chatHistory);
+            console.debug("Chat history loaded. Length: " + masterHistory.length);
+        } catch (e) {
+            console.error("Error parsing chat history: " + e);
+            masterHistory = [];
+        }
+    }
+
+    return masterHistory;
+}
+
+function setPluginId(id) {
+    pluginId = id;
+}
+
+function setPluginService(service) {
+    pluginService = service;
 }
 
 function isModelLoaded(modelName) {

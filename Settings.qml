@@ -66,4 +66,18 @@ PluginSettings {
         minimum: 2
         maximum: 100
     }
+
+    ToggleSetting {
+        settingKey: "persistChatHistory"
+        label: "Persist Chat History across Sessions"
+        description: "Enable or disable persistence of chat history across sessions."
+        defaultValue: false
+    }
+
+    ToggleSetting {
+        settingKey: "showMessageAlerts"
+        label: "Show Message Alerts"
+        description: "Enable or disable message alerts when the chat popout is hidden."
+        defaultValue: false
+    }
 }
