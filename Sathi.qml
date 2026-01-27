@@ -103,6 +103,7 @@ PluginComponent {
         geminiApiKey: pluginData.geminiApiKey || ""
         openaiApiKey: pluginData.openaiApiKey || ""
         ollamaUrl: pluginData.ollamaUrl || ""
+        lmstudioUrl: pluginData.lmstudioUrl || ""
         persistChatHistory: pluginData.persistChatHistory
 
         model: root.aiModel
@@ -154,7 +155,8 @@ PluginComponent {
         geminiApiKey: pluginData.geminiApiKey || ""
         openaiApiKey: pluginData.openaiApiKey || ""
         ollamaUrl: pluginData.ollamaUrl || ""
-        
+        lmstudioUrl: pluginData.lmstudioUrl || ""
+
         onNewModels: (models, isError) => {
             try {
                 var data = JSON.parse(models);
